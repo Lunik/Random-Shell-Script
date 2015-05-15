@@ -1,0 +1,35 @@
+#!/bin/sh
+
+rouge='\033[0;31m'
+vert='\033[0;32m'
+jaune='\033[0;33m'
+neutre='\033[0;0m'
+
+if !(test -z $1)
+	then
+	max=$1
+else
+	max=1000
+fi
+actual=$(ps -e | wc | sed -e 's/[ ]*//' | sed -e 's/[ ][ ]*[0-9]*//g')
+
+percent=$(expr $(expr $actual \* 100) / $max)
+affichage=''
+i=0
+
+if $(test $percent -ge 66)
+then
+    affichage=$rouge$percent
+else
+    if $(test $percent -ge 33)
+    then
+        affichage=$jaune$percent
+    else
+        affichage=$vert$percent
+    fi
+fi
+
+echo $affichage\% - $actual"/"$vert$max "Processus" $neutre
+affichage=''
+
+progress $actual $max

@@ -1,0 +1,73 @@
+#!/bin/sh
+vert='\\033[0;32m';
+rouge='\\033[0;31m';
+jaune='\\033[0;33m';
+neutre='\\033[0;0m';
+
+case "$1" in
+  "series")
+     type=series; title="Séries"; boucle=3;;
+  "films")
+     type=films; title="Films"; boucle=0;;
+  *)
+     echo "Type inconu\n"; exit;;
+esac
+
+today=$(date +"%d\/%m")
+yesturday=$(date -v-1d +"%d\/%m")
+yyesturday=$(date -v-2d +"%d\/%m")
+A=""
+while(test $boucle -ge 0)
+do
+A=$(curl -# http://www.cpasbien.pw/view_cat.php?categorie="$type"\&page=$boucle | grep -e 'class="titre"' -A 10 | sed -e '
+	s/<[\/]*[span|div][^>]*>//g; 
+	s/Préc[ 0-9]*//g;
+	s/[0-9]*//;
+	s/<[\/]*[span|div][^>]*>//g; 
+	s/;[^-]*- /\\n/g; 
+	s/;[^-]*-[^-]*-/\\n/g;
+	s/\\n /\\n/g;
+	s/^ //g;
+	s/\" class=\"titre\">/ /g;
+	s/Mo&nbsp//g; 
+	s/Go&nbsp//g;
+	s/[^>]*>//; 
+	s/;.*//; 
+	s/HDTV[0-9.]*[^ ]//g; 
+	s/HDTV//g; 
+	s/FRENCH//g; 
+	s/VOSTFR//g;
+	s/FINAL//g;
+	s/DVDRIP//g;
+	s/x264//g;
+	s/BluRay//g;
+	s/1080p//g;
+	s/720p//g;
+	s/DVDSCR//g;
+	s/AC3//g;
+	s/WEBRIP//g;
+	s/PROPER//g;
+	s/([^)]*)//g;
+	s/[0-9]*\.[0-9]//g;
+	s/\/*20[01][0-9]//g;
+	s/\.//g;
+	s/^[^-]*-//;
+	s/^ //;
+' | 
+sed -e "s/$today/$vert$today$neutre/g" | 
+sed -e "s/$yesturday/$jaune$yesturday$neutre/g" |
+sed -e "s/$yyesturday/$rouge$yyesturday$neutre/g")\\n$A
+boucle=$(expr $boucle - 1)
+done
+if (test $type = series)
+	then
+	A=$(echo $A | 
+		grep -e "The Flash" -e "SHIELD" -e "iZombie" -e "Arrow" -e "Walking Dead" -e "Game of Thrones" -e "Vikings" -e "Doctor Who" -e "Once Upon A Time" -e "Powers" -e "The 100" -e "The Messengers" -e "Under The Dome"| 
+		sed -e 's/^/\\n/')
+else
+	A=\\n$A
+fi
+echo "$title": $A | uniq
+
+echo $A | uniq > /tmp/"cpb_$type"
+

@@ -1,0 +1,171 @@
+#!/bin/bash
+clear
+#nb de videos
+nbDl=0
+#contain videos 
+videos=''
+video=''
+#contain ids videos
+ids=''
+#contain the error
+erreur=''
+#containe the mode to use
+mode=''
+if(!(test -z $1) && !(test $1 = '-f'))
+	then
+	#if mode url in parameter
+	mode="parameter"
+	echo "===> Reading parameter"
+	while(!(test -z $1))
+	do
+		#get video
+		video=$(echo $1)
+		#clean video string
+		id=$(echo $video | 
+			sed -e '
+				s/http[s]*\:\/\///g;
+				s/youtu[^/]*\///g;
+				s/www//g;
+				s/\.//g;
+				s/watch.*=//g;
+				s/#.*//;/^$/g;
+			')
+		echo -en $id
+		#test url valid
+		youtube-dl -s -q "$id"
+		if(test $? = 1)
+			then
+			#url invalid
+			erreur="url"
+			break
+		else
+			#url valid
+			echo ' OK!'
+			videos=$videos' '$video
+			ids=$ids' '$id
+			nbDl=$(expr $nbDl + 1)
+		fi
+		#go to next parameter
+		shift
+	done
+else
+	if(!(test -z $1) && (test $1 = '-f') && !(test -z $2))
+		then
+		#if mode url in file
+		mode="file"
+		fileName="$2"
+		echo "===> Reading file"
+		while(true)
+		do
+			#read line
+			read video
+			if(test -z $video)
+				then
+				break
+			fi
+			id=$(echo $video | 
+			sed -e '
+				s/http[s]*\:\/\///g;
+				s/youtu[^/]*\///g;
+				s/www//g;
+				s/\.//g;
+				s/watch.*=//g;
+				s/#.*//;/^$/g;
+			')
+			echo -en $id
+			#test id not empty
+			if(!(test -z "$id"))
+				then
+				#test url valid
+				youtube-dl -s -q "$id"
+				if(test $? = 1)
+					then
+					#url invalid
+					erreur="url"
+					break
+				else
+					#url valid
+					echo ' OK!'
+					videos=$videos' '$video
+					ids=$ids' '$id
+					nbDl=$(expr $nbDl + 1)
+				fi
+			fi
+		done < $fileName
+	fi
+fi
+
+#if no prvious error
+#and videos empty
+if($(test -z "$videos") && $(test -z $erreur) && (test "$mode" = "file"))
+	then
+	erreur="empty"
+fi
+
+if((test -z $erreur) && !(test -z "$mode"))
+	then
+	nbDlP1=$(expr $nbDl + 1)
+	i=1
+	#charge the progress bar
+	chargement=$(progress $i $nbDlP1)
+	#while there are video
+	while(!(test -z "$videos") && !(test $i -gt $nbDl))
+	do
+		clear
+		#get first video in videos
+		video=$(echo $videos | 
+			sed -e 's/ .*//;')
+		#remove first video in videos
+		videos=$(echo $videos | 
+			sed -e 's/[^ ]* //;')
+		#get first id in ids
+		id=$(echo $ids | 
+			sed -e 's/ .*//;')
+		#remove first id in ids
+		ids=$(echo $ids | 
+			sed -e 's/[^ ]* //;')
+
+		command="youtube-dl 
+							--no-mtime
+							--extract-audio
+							--audio-format mp3 
+							--write-thumbnail
+							--output $HOME/Downloads/%(title)s.%(ext)s 
+							$video"
+
+		echo $chargement
+		echo "===> Downloading [$i/$nbDl] $id" 
+		i=$(expr $i + 1)
+		chargement=$(progress $i $nbDlP1)
+		$command
+		shift
+	done
+
+	chargement=$(progress 1 1)
+	clear
+	echo $chargement
+	echo "===> Finished"
+
+	#option tu delete the file
+	if(test "$mode" = "file")
+		then
+		while true; do
+    		read -p "Do you want to erase the file ? (yes/no): " yn
+    		case $yn in
+        		[Yy]* ) rm $fileName; break;;
+        		[Nn]* ) break;;
+        		* ) echo "yes or no ?";;
+    		esac
+		done
+	fi
+else
+	clear
+	#print errors
+	case "$erreur" in
+		"url") echo "===> Invalid url: $video";;
+		"empty") echo "===> File empty";; 
+		*) echo "usage: ytmp3 [id ..] [-f file]";;
+	esac
+fi
+
+

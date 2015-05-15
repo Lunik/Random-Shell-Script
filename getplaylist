@@ -1,0 +1,55 @@
+#!/bin/bash
+
+#https://www.youtube.com/playlist?list=PLdX70iqrTCeWKCjnVuzP2rxyZYDs5_IdP
+
+if(!(test -z $1))
+	then
+	playlist=$(echo $1 |
+		sed -e '
+			s/.*list=//;
+		')
+fi
+
+if(!(test -z $2) && (test $2 = "-f") && !(test -z $3))
+	then
+	mode="exportfile"
+	exportfile="$3"
+else
+	mode="echo"
+fi
+
+if(!(test -z $playlist))
+	then
+	ids=$(youtube-dl --simulate --yes-playlist --get-id $playlist)' '
+	if(test $? -eq 1)
+		then
+		error=1
+	fi
+	A=''
+	while(!(test -z "$ids") && !(test "$error" = 1))
+	do
+		#get first id in ids
+		id=$(echo $ids | 
+			sed -e 's/ .*//;')
+		url=$(echo $id |
+			sed -e 's/^/https:\/\/youtu.be\//;')
+		#remove first id in ids
+		ids=$(echo $ids | 
+			sed -e 's/[^ ]*//;')
+		
+		title=$(youtube-dl --simulate --get-title $url)
+
+		video='#'$title'\n'$url
+		echo -e $video
+		A=$A'\n'$video'\n'
+	done
+
+	if((test "$mode" = "exportfile") && !(test "$error" = 1))
+		then
+		echo -e $A > $exportfile
+	else
+		echo -e $A
+	fi
+else
+	echo "usage: getplaylist url [-f file]"
+fi

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+
+color=$(echo $1 | awk '{print tolower($0)}')
+case $color in
+	noir|black) color='\\033[0;30m';;
+	rouge|red) color='\\033[0;31m';;
+	vert|green) color='\\033[0;32m';;
+	jaune|yellow) color='\\033[0;33m';;
+	bleu|blue) color='\\033[0;34m';;
+	rose|pink) color='\\033[0;35m';;
+	cyan) color='\\033[0;36m';;
+	blanc|white) color='\\033[0;37m';;
+	*) color='\\033[0;0m';;
+esac
+
+echo $color;
