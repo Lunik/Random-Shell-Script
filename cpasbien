@@ -62,7 +62,7 @@ done
 if (test $type = series)
 	then
 	A=$(echo $A | 
-		grep -e "The Flash" -e "SHIELD" -e "iZombie" -e "Arrow" -e "Walking Dead" -e "Game of Thrones" -e "Vikings" -e "Doctor Who" -e "Once Upon A Time" -e "Powers" -e "The 100" -e "The Messengers" -e "Under The Dome"| 
+		grep -e "The Flash" -e "SHIELD" -e "iZombie" -e "Arrow" -e "Walking Dead" -e "Game of Thrones" -e "Vikings" -e "Doctor Who" -e "Once Upon A Time" -e "Powers" -e "The 100" -e "The Messengers" -e "Under The Dome" -e "Supergirl"| 
 		sed -e 's/^/\\n/')
 else
 	A=\\n$A
