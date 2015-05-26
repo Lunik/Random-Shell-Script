@@ -1,0 +1,29 @@
+#!/bin/sh
+
+imagePath="/tmp/qwertee"
+if(!(test -d "$imagePath"))
+	then
+	mkdir "$imagePath"
+fi
+
+Design=$(curl https://www.qwertee.com/ | grep -e "dynamic-image-design" -m 4 | uniq | sed -e 's/<img src=\"/http:\/\/qwertee.com/g; s/\"[^$]*//g;')
+Background=$(curl https://www.qwertee.com/ | grep -e "dynamic-image-colour" -m 2 | uniq | sed -e 's/<img src=\"/http:\/\/qwertee.com/g; s/\"[^$]*//g;')
+
+url1=$(echo $Design | sed -e 's/ .*//')
+background1=$(echo $Background | sed -e 's/ .*//')
+url2=$(echo $Design | sed -e 's/[^ ]* //')
+background2=$(echo $Background | sed -e 's/[^ ]* //')
+
+wget $url1 -O "$imagePath/1.png"
+wget $url2 -O "$imagePath/2.png"
+wget $background1 -O "$imagePath/b1.png"
+wget $background2 -O "$imagePath/b2.png"
+wget "http://qwertee.com/images/mens-overlay.png" -O "$imagePath/overlay.png"
+
+composite -compose Over "$imagePath/overlay.png" "$imagePath/b1.png" "$imagePath/b1.png"
+composite -compose Over "$imagePath/overlay.png" "$imagePath/b2.png" "$imagePath/b2.png"
+
+composite -compose Over -gravity center -geometry +0-20 "$imagePath/1.png" -resize 40% "$imagePath/b1.png" "$imagePath/1.png"
+composite -compose Over -gravity center -geometry +0-20 "$imagePath/2.png" -resize 40% "$imagePath/b2.png" "$imagePath/2.png"
+
+rm "$imagePath/b1.png" "$imagePath/b2.png" "$imagePath/overlay.png"
