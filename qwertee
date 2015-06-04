@@ -27,3 +27,5 @@ composite -compose Over -gravity center -geometry +0-20 "$imagePath/1.png" -resi
 composite -compose Over -gravity center -geometry +0-20 "$imagePath/2.png" -resize 40% "$imagePath/b2.png" "$imagePath/2.png"
 
 rm "$imagePath/b1.png" "$imagePath/b2.png" "$imagePath/overlay.png"
+
+automator /Users/guillaumemartinez/Documents/geeklet/reload\ qwertee.workflow
